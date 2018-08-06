@@ -6,6 +6,11 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 
 class Spreadsheet:
+    """worksheetへ記録する操作に加え、削除する操作をするクラスにする場合を考えてみる。"""
+
+    def __init__(self):
+        self.worksheet = self.prepare_worksheet()
+
     def prepare_worksheet(self):
         """worksheetを準備する。"""
         scope = ['https://spreadsheets.google.com/feeds',
@@ -18,13 +23,18 @@ class Spreadsheet:
 
         return gc.open('gspreadサンプル').sheet1
 
-    def main(self, running_time):
+    def record(self, running_time):
         """準備されたworksheetに、現在の日時とrunning_timeを記録する"""
-        worksheet = self.prepare_worksheet()
-
+        # worksheet = self.prepare_worksheet() <-  __init__() へ引き上げ
         current_datetime = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
-        worksheet.append_row([current_datetime, running_time])
 
+        self.worksheet.append_row([current_datetime, running_time])
+
+    def delete(self):
+        # worksheet = self.prepare_worksheet() <-  __init__() へ引き上げ
+
+        # 具体的な記録を削除する処理は省略する
+        self.worksheet.hoge()
 
 if __name__ == '__main__':
-    Spreadsheet().main(running_time=20)
+    Spreadsheet().record(running_time=20)
