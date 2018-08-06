@@ -5,36 +5,42 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
 
-class Spreadsheet:
-    """worksheetへ記録する操作に加え、削除する操作をするクラスにする場合を考えてみる。"""
+class WorksheetPreparer:
+    """worksheetを取り扱うクラス"""
 
-    def __init__(self):
-        self.worksheet = self.prepare_worksheet()
-
-    def prepare_worksheet(self):
-        """worksheetを準備する。"""
+    def prepare(self, sheet_title):
         scope = ['https://spreadsheets.google.com/feeds',
                  'https://www.googleapis.com/auth/drive']
         p = Path(__file__)
-        q = p.parent / 'gspread.json'
+        q = p.parent / 'gspread-sample.json'
 
         credentials = ServiceAccountCredentials.from_json_keyfile_name(q, scope)
         gc = gspread.authorize(credentials)
 
-        return gc.open('gspreadサンプル').sheet1
+        return gc.open('gspreadサンプル').worksheet(title=sheet_title)
 
-    def record(self, running_time):
-        """準備されたworksheetに、現在の日時とrunning_timeを記録する"""
-        # worksheet = self.prepare_worksheet() <-  __init__() へ引き上げ
+
+class TimesSheetOperator:
+    """時間の記録を担当するクラス"""
+    TITLE = "times"
+
+    def __init__(self):
+        self.worksheet = WorksheetPreparer().prepare(self.TITLE)
+
+    def record(self, study_time):
         current_datetime = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
+        self.worksheet.append_row([current_datetime, study_time])
 
-        self.worksheet.append_row([current_datetime, running_time])
 
-    def delete(self):
-        # worksheet = self.prepare_worksheet() <-  __init__() へ引き上げ
+class UsersSheetOperator:
+    """ユーザーの操作を担当するクラス"""
+    TITLE = "users"
 
-        # 具体的な記録を削除する処理は省略する
-        self.worksheet.hoge()
+    def __init__(self):
+        self.worksheet = WorksheetPreparer().prepare(self.TITLE)
+
+    def find(self):
+        pass
 
 if __name__ == '__main__':
-    Spreadsheet().record(running_time=20)
+    TimesSheetOperator().record(study_time=20)
