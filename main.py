@@ -1,4 +1,5 @@
 import datetime
+from abc import ABCMeta
 from pathlib import Path
 
 import gspread
@@ -6,41 +7,40 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 
 class WorksheetPreparer:
-    """worksheetを取り扱うクラス"""
-
-    def prepare(self, sheet_title):
+    def prepare(self, sheet_operator):
         scope = ['https://spreadsheets.google.com/feeds',
                  'https://www.googleapis.com/auth/drive']
         p = Path(__file__)
-        q = p.parent / 'gspread-sample.json'
+        q = p.parent / 'gspread.json'
 
         credentials = ServiceAccountCredentials.from_json_keyfile_name(q, scope)
         gc = gspread.authorize(credentials)
 
-        return gc.open('gspreadサンプル').worksheet(title=sheet_title)
+        return gc.open('gspreadサンプル').worksheet(title=sheet_operator.TITLE)
 
 
-class TimesSheetOperator:
-    """時間の記録を担当するクラス"""
-    TITLE = "times"
+class SheetOperator(metaclass=ABCMeta):
+    TITLE = ''
 
-    def __init__(self):
-        self.worksheet = WorksheetPreparer().prepare(self.TITLE)
+    def __init__(self, worksheet_preparer: WorksheetPreparer):
+        self.worksheet = worksheet_preparer.prepare(self)
 
-    def record(self, study_time):
+
+class TimesSheetOperator(SheetOperator):
+    TITLE = 'times'
+
+    def record(self, running_time: int) -> None:
         current_datetime = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
-        self.worksheet.append_row([current_datetime, study_time])
+
+        self.worksheet.append_row([current_datetime, running_time])
 
 
-class UsersSheetOperator:
-    """ユーザーの操作を担当するクラス"""
-    TITLE = "users"
-
-    def __init__(self):
-        self.worksheet = WorksheetPreparer().prepare(self.TITLE)
+class UsersSheetOperator(SheetOperator):
+    TITLE = 'users'
 
     def find(self):
         pass
 
 if __name__ == '__main__':
-    TimesSheetOperator().record(study_time=20)
+    worksheet_preparer = WorksheetPreparer()
+    TimesSheetOperator(worksheet_preparer).record(running_time=30)
